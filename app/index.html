@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JevTalk</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #F5F5F7; --card: #FFFFFF; --sunken: #F0F0F3; --line: #E3E3E8;
+    --text: #111114; --muted: #5E5E68;
+    --accent: #2563EB; --accent-hover: #1D4ED8; --on-accent: #FFFFFF; --accent-tint: #E9F0FE;
+    --danger: #B42318; --danger-tint: #FDECEA;
+    font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618; --card: #1F1F22; --sunken: #2A2A2E; --line: #35353B;
+      --text: #F2F2F4; --muted: #A1A1AA;
+      --accent: #60A5FA; --accent-hover: #93C5FD; --on-accent: #0B1220; --accent-tint: #1E2A3D;
+      --danger: #F87171; --danger-tint: #3A1D1D;
+    }
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; }
+  button, input { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  svg { flex: none; }
+
+  main { max-width: 1160px; margin: 0 auto; padding: 20px 28px 40px; display: flex; flex-direction: column; gap: 24px; }
+  header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+  h1 { margin: 0; font-size: 24px; font-weight: 600; letter-spacing: -0.01em; }
+  .sub { margin-top: 2px; color: var(--muted); }
+
+  .btn { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border: 0; border-radius: 999px;
+         font-weight: 500; white-space: nowrap; cursor: pointer; transition: background-color .15s; }
+  .btn.primary { background: var(--accent); color: var(--on-accent); }
+  .btn.primary:hover { background: var(--accent-hover); }
+  .btn.secondary { background: var(--card); box-shadow: inset 0 0 0 1px var(--line); }
+  .btn.secondary:hover { background: var(--sunken); }
+  .btn:disabled { opacity: .45; cursor: default; }
+
+  .ask { display: flex; gap: 8px; }
+  .field { flex: 1; display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 6px 0 12px; border-radius: 999px;
+           background: var(--card); box-shadow: inset 0 0 0 1px var(--line); color: var(--muted); cursor: text; }
+  .field:focus-within { box-shadow: inset 0 0 0 1px var(--accent), 0 0 0 3px var(--accent-tint); }
+  .field input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--text); }
+  .field input::placeholder { color: var(--muted); }
+  kbd { padding: 1px 6px; border-radius: 6px; background: var(--sunken); color: var(--muted); font-size: 12px; font-weight: 500; }
+
+  .notice { padding: 12px 16px; border-radius: 14px; background: var(--danger-tint); }
+  .notice strong { display: block; color: var(--danger); font-weight: 600; }
+
+  .grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+  .col { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+  @media (max-width: 900px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+
+  .card { position: relative; padding: 16px; border-radius: 20px; background: var(--card); box-shadow: 0 0 0 1px var(--line); }
+  .head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 4px 12px; }
+  h2 { margin: 0; display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600; }
+  .hint { color: var(--muted); font-size: 12.5px; }
+  .count { padding: 0 7px; border-radius: 999px; background: var(--sunken); color: var(--muted); font-size: 12px; font-weight: 500; }
+  .empty { margin: 0 4px 4px; color: var(--muted); }
+
+  .question { margin: 0 36px 6px 4px; color: var(--muted); font-weight: 500; }
+  .answer { margin: 0 4px 14px; min-height: 64px; font-size: 26px; line-height: 1.25; font-weight: 600; letter-spacing: -0.01em; }
+  .answer.idle { color: var(--muted); font-weight: 500; }
+  .answer .w { animation: word-in .15s ease-out; }
+  @keyframes word-in { from { opacity: 0; } }
+  .meta { display: flex; align-items: center; gap: 8px; margin: 0 4px; padding-top: 12px; border-top: 1px solid var(--line);
+          color: var(--muted); font-size: 13.5px; }
+  .meta .stats { margin-left: auto; white-space: nowrap; }
+
+  .rows { display: flex; flex-direction: column; gap: 6px; }
+  .row { display: flex; align-items: flex-start; gap: 10px; padding: 8px; border-radius: 12px; background: var(--sunken); }
+  .num { flex: none; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%;
+         background: var(--card); color: var(--muted); font-size: 12px; font-weight: 500; }
+  .text { flex: 1; min-width: 0; padding-top: 3px; }
+  .draft .text:empty::before { content: "Starting…"; color: var(--muted); }
+  .end { flex: none; display: flex; align-items: center; min-height: 26px; color: var(--muted); }
+  .chip { padding: 1px 8px; border-radius: 999px; background: var(--card); font-size: 12px; font-weight: 500; white-space: nowrap; }
+  .draft.done:not(.picked) .text { color: var(--muted); }
+  .draft.picked { background: var(--accent-tint); }
+  .draft.picked .num, .draft.picked .chip { background: var(--accent); color: var(--on-accent); }
+  .draft.picked .text { font-weight: 600; }
+  .turn .text { padding: 0 0 0 4px; }
+  .turn small { display: block; color: var(--muted); font-size: 12.5px; }
+
+  .spinner { flex: none; width: 12px; height: 12px; border: 1.6px solid currentColor; border-right-color: transparent;
+             border-radius: 50%; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .x { flex: none; display: grid; place-items: center; width: 28px; height: 28px; border: 0; border-radius: 999px;
+       background: transparent; color: var(--muted); cursor: pointer; opacity: 0; transition: opacity .15s, background-color .15s; }
+  .x:hover { background: var(--line); color: var(--text); }
+  .turn:hover .x, .answer-card:hover .x, .x:focus-visible { opacity: 1; }
+  .answer-card .x { position: absolute; top: 12px; right: 12px; }
+
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .001s !important; transition-duration: .001s !important; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <h1>Ask Jev</h1>
+      <div class="sub">Jev can’t write. It picks from options, so it spells out every answer one choice at a time.</div>
+    </div>
+    <button class="btn secondary" id="reset" type="button">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+      Start over
+    </button>
+  </header>
+
+  <form class="ask" id="ask" autocomplete="off">
+    <label class="field">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/><path d="M7 11h10"/><path d="M7 15h6"/><path d="M7 7h8"/></svg>
+      <input id="q" maxlength="300" aria-label="Question" placeholder="Ask a simple question, like “What do bees make?”" autofocus>
+      <kbd aria-hidden="true">↵</kbd>
+    </label>
+    <button class="btn primary" id="go" type="submit">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      Ask
+    </button>
+  </form>
+
+  <div class="notice" id="error" role="alert" hidden>
+    <strong>Jev couldn’t answer</strong>
+    <span id="error-text"></span>
+  </div>
+
+  <div class="grid">
+    <div class="col">
+      <section class="card answer-card" aria-live="polite">
+        <button class="x" id="answer-x" type="button" hidden aria-label="Remove this answer from the conversation"
+                title="Remove from the conversation"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+        <p class="question" id="question">Jev’s answer</p>
+        <p class="answer idle" id="answer">Ask a question to watch Jev spell out an answer.</p>
+        <div class="meta">
+          <span class="spinner" id="spin" hidden></span>
+          <span id="phase">Ready</span>
+          <span class="stats" id="stats"></span>
+        </div>
+      </section>
+
+      <section class="card" id="earlier" hidden>
+        <div class="head"><h2>Earlier</h2><span class="hint">Jev reads these before answering</span></div>
+        <div class="rows" id="turns"></div>
+      </section>
+    </div>
+
+    <section class="card">
+      <div class="head"><h2>Drafts <span class="count">8</span></h2><span class="hint">Written at once, then Jev picks one</span></div>
+      <p class="empty" id="drafts-empty">Ask something and the drafts appear here as Jev writes them, word by word.</p>
+      <div class="rows" id="drafts"></div>
+    </section>
+  </div>
+</main>
+
+<script>
+const TOKEN = new URLSearchParams(location.hash.slice(1)).get("t");
+const $ = (id) => document.getElementById(id);
+const X_ICON = $("answer-x").innerHTML;
+
+let busy = false, current = null, picked = null, rows = [];
+
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+
+function setWords(node, text, previous) {  // new words fade in; taken-back words just disappear
+  const words = text.split(" "), old = (previous || "").split(" ");
+  let keep = 0;
+  while (keep < words.length && keep < old.length && words[keep] === old[keep]) keep++;
+  node.replaceChildren(...words.map((w, i) => el("span", i < keep ? "" : "w", (i ? " " : "") + w)));
+}
+
+function showAnswer(text) {
+  const a = $("answer");
+  setWords(a, text, a.classList.contains("idle") ? "" : a.textContent);
+  a.classList.remove("idle");
+}
+
+function stats(s) {
+  if (s) $("stats").textContent = `${s.calls} Jev calls · $${s.cost.toFixed(4)} · ${s.secs.toFixed(1)}s`;
+}
+
+function makeDrafts(n) {
+  $("drafts-empty").hidden = true;
+  rows = [];
+  $("drafts").replaceChildren(...Array.from({ length: n }, (_, i) => {
+    const row = el("div", "row draft");
+    const text = el("div", "text");
+    const end = el("div", "end");
+    end.append(el("span", "spinner"));
+    row.append(el("span", "num", String(i + 1)), text, end);
+    rows.push({ row, text, end });
+    return row;
+  }));
+}
+
+function onDraft(e) {
+  const r = rows[e.i];
+  if (!r) return;
+  r.text.textContent = e.text;
+  if (e.score === null || e.score === undefined) return;
+  r.row.classList.add("done");
+  r.score = e.score;
+  const best = rows.reduce((b, x, j) => (x.score !== undefined && (b < 0 || x.score > rows[b].score) ? j : b), -1);
+  rows.forEach((x, j) => {
+    if (x.score === undefined) return;
+    x.row.classList.toggle("picked", j === best);
+    x.end.replaceChildren(el("span", "chip", (j === best ? "Picked · " : "") + Math.round(x.score * 100) + "%"));
+  });
+  if (best !== picked) {
+    picked = best;
+    $("phase").textContent = `Jev picked draft ${best + 1}. Polishing`;
+  }
+}
+
+function onLog(line) {
+  if (line.startsWith("length plan:")) {
+    const plan = line.split(":")[1].split("->")[0].trim();
+    $("phase").textContent = `Length: ${plan}. Picking a key word`;
+  } else if (line.startsWith("key word:")) {
+    $("phase").textContent = `Key word “${line.split(":")[1].trim()}”. Writing ${rows.length} drafts`;
+  }
+}
+
+async function forget(id) {  // drop one answer from the conversation Jev sees
+  const res = await fetch("/forget", { method: "POST", body: JSON.stringify({ id }),
+                                       headers: { "Content-Type": "application/json", "X-Token": TOKEN } });
+  return res.ok;
+}
+
+function idle() {
+  $("answer-x").hidden = true;
+  $("question").textContent = "Jev’s answer";
+  const a = $("answer");
+  a.textContent = "Ask a question to watch Jev spell out an answer.";
+  a.classList.add("idle");
+  $("phase").textContent = "Ready";
+  $("stats").textContent = "";
+  $("drafts").replaceChildren();
+  $("drafts-empty").hidden = false;
+}
+
+function archive() {  // move the finished turn into Earlier
+  if (!current || !current.answer) return;
+  const row = el("div", "row turn");
+  const text = el("div", "text", current.answer);
+  text.append(el("small", "", `“${current.question}” · ${current.meta}`));
+  const x = el("button", "x");
+  x.type = "button";
+  x.title = "Remove from the conversation";
+  x.setAttribute("aria-label", `Remove “${current.answer}” from the conversation`);
+  x.innerHTML = X_ICON;
+  const id = current.id;
+  x.addEventListener("click", async () => {
+    if (!(await forget(id))) return;
+    row.remove();
+    $("earlier").hidden = !$("turns").children.length;
+  });
+  row.append(text, x);
+  $("turns").prepend(row);
+  $("earlier").hidden = false;
+  current = null;
+}
+
+function finish(phase) {
+  busy = false;
+  $("spin").hidden = true;
+  $("phase").textContent = phase;
+  $("go").disabled = false;
+  $("q").focus();
+}
+
+async function ask(question) {
+  archive();
+  busy = true;
+  picked = null;
+  current = { question, answer: "", meta: "" };
+  $("error").hidden = true;
+  $("answer-x").hidden = true;
+  $("go").disabled = true;
+  $("question").textContent = question;
+  const a = $("answer");
+  a.textContent = "…";
+  a.classList.add("idle");
+  $("spin").hidden = false;
+  $("phase").textContent = "Deciding how long the answer should be";
+  $("stats").textContent = "";
+  makeDrafts(8);
+  let last = null;
+  try {
+    const res = await fetch("/ask", { method: "POST", body: JSON.stringify({ question }),
+                                      headers: { "Content-Type": "application/json", "X-Token": TOKEN } });
+    if (!res.ok) throw new Error(res.status === 409 ? "Jev is still answering the last question." : `The app’s server said ${res.status}.`);
+    const reader = res.body.getReader(), dec = new TextDecoder();
+    let buf = "";
+    for (;;) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      let n;
+      while ((n = buf.indexOf("\n")) >= 0) {
+        const e = JSON.parse(buf.slice(0, n));
+        buf = buf.slice(n + 1);
+        last = e;
+        stats(e.stats);
+        if (e.type === "log") onLog(e.line);
+        else if (e.type === "draft") onDraft(e);
+        else if (e.type === "text") showAnswer(e.text);
+        else if (e.type === "done") {
+          showAnswer(e.answer || "(no answer)");
+          current.answer = e.answer;
+          current.id = e.id;
+          current.meta = $("stats").textContent;
+          $("answer-x").hidden = false;
+          finish("Done");
+        } else if (e.type === "error") throw new Error(e.message);
+      }
+    }
+    if (!last || last.type !== "done") throw new Error("The connection closed before Jev finished.");
+  } catch (err) {
+    $("error-text").textContent = `${err.message} Nothing is lost. Try again in a moment.`;
+    $("error").hidden = false;
+    if (current && !current.answer) a.textContent = "No answer this time.";
+    finish("Stopped");
+  }
+}
+
+$("ask").addEventListener("submit", (ev) => {
+  ev.preventDefault();
+  const q = $("q").value.trim();
+  if (!q || busy) return;
+  $("q").value = "";
+  ask(q);
+});
+
+$("reset").addEventListener("click", async () => {
+  if (busy) return;
+  await fetch("/clear", { method: "POST", headers: { "X-Token": TOKEN } });
+  current = null;
+  $("turns").replaceChildren();
+  $("earlier").hidden = true;
+  $("error").hidden = true;
+  idle();
+  $("q").focus();
+});
+
+$("answer-x").addEventListener("click", async () => {
+  if (busy || !current || !(await forget(current.id))) return;
+  current = null;
+  idle();
+  $("q").focus();
+});
+</script>
+</body>
+</html>

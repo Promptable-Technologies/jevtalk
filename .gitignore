@@ -1,0 +1,6 @@
+# built locally (vocab.txt: see build_vocab.py for why it isn't committed)
+vocab.txt
+build/
+__pycache__/
+*.pyc
+.DS_Store
